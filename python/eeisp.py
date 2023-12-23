@@ -196,6 +196,90 @@ def calc_CDI(A, Count_joint, Prob_joint, Count_excl, Prob_excl, threCDI, threEEI
   return DEGREE_CDI, DEGREE_EEI
 
 
+def calc_CDI_topThreshold(A, Count_joint, Prob_joint, Count_excl, Prob_excl, threCDI, threEEI, filename):
+  # Compute the probability that the number of cells that two genes jointly have 
+  # nonzero expression is more than 1_{ij} using a binomial distribution and the score of CDI. 
+  Allgene = A.shape[0]
+  Allcell = A.shape[1]
+  CDI = np.zeros((Allgene, Allgene), dtype=np.float64)
+  EEI = np.zeros((Allgene, Allgene), dtype=np.float64)
+  for i in range(0, Allgene):
+     for j in range(i+1, Allgene):
+       x = Count_joint[i][j]
+       p = Prob_joint[i][j]
+       n = Allcell
+       prob = binom.sf(x-1, n, p)
+       if( prob <= 0 ):
+          CDI[i][j] = CDI[j][i] = -10000000.0 
+       else:
+          CDI[i][j] = CDI[j][i] = -(math.log10(binom.sf(x-1, n, p)))
+      #  logger.info ("CDI(%d,%d)=%.3F, CDI(%d,%d)=%.3F" % (i,j,CDI[i][j],j,i,CDI[j][i]))
+       #logger.info ("-----------------------------------------------") 
+  
+       x1 = Count_excl[j][i]
+       p1 = Prob_excl[i][j]
+       n = Allcell
+       prob1 = binom.sf(x1-1, n, p1)
+       x2 = Count_excl[i][j]
+       p2 = Prob_excl[j][i]
+       prob2 = binom.sf(x2-1, n, p2)
+       if( prob1 <= 0 or prob2 <= 0 ): 
+          EEI[i][j] = EEI[j][i] = -10000000.0 
+       else:
+          score_eei = ((-(math.log10(prob1))) + (-(math.log10(prob2)))) / 2  
+          EEI[i][j] = EEI[j][i] = score_eei  
+       
+       #logger.info ("EEI(%d,%d)=%.3F, EEI(%d,%d)=%.3F" % (i,j,EEI[i][j],j,i,EEI[j][i]))
+       #logger.info ("-----------------------------------------------")
+
+  array_cdi = []  
+  array_eei = []
+  for i in range(0, Allgene):
+     for j in range(0, Allgene):
+       if( CDI[i][j] != 0.0 or CDI[j][i] != 0.0 ):
+          gene1 = i
+          gene2 = j
+          cdi = CDI[i][j]
+          gene = []
+          gene.append(gene1)  
+          gene.append(gene2) 
+          gene.append(cdi)   
+          array_cdi.append(gene)
+      
+       if( EEI[i][j] != 0.0 or EEI[j][i] != 0.0 ):
+          gene1 = i
+          gene2 = j
+          eei = EEI[i][j]
+          gene = []
+          gene.append(gene1)  
+          gene.append(gene2) 
+          gene.append(eei)    
+          array_eei.append(gene)
+  
+  array_cdi = sorted(array_cdi, key=itemgetter(2), reverse=True)
+  array_eei = sorted(array_eei, key=itemgetter(2), reverse=True)
+  nparray_cdi = np.array(array_cdi)
+  nparray_eei = np.array(array_eei)
+  threCDI_value = np.percentile(nparray_cdi[:,2], 100 - int(threCDI*100))
+  threEEI_value = np.percentile(nparray_eei[:,2], 100 - int(threEEI*100))
+  filltered_cdi = nparray_cdi[nparray_cdi[:,2] >= threCDI_value]
+  filltered_eei = nparray_eei[nparray_eei[:,2] >= threEEI_value]
+  
+  unique_values, counts = np.unique(filltered_cdi[:,0], return_counts=True)
+  count_dict = {key: 0 for key in range(Allgene)}
+  count_dict.update(dict(zip(unique_values, counts)))
+  DEGREE_CDI = list(count_dict.values())
+  unique_values, counts = np.unique(filltered_eei[:,0], return_counts=True)
+  count_dict = {key: 0 for key in range(Allgene)}
+  count_dict.update(dict(zip(unique_values, counts)))
+  DEGREE_EEI = list(count_dict.values())
+  
+  pd.DataFrame(filltered_cdi, columns=[0,1,2]).astype({0:int, 1:int, 2:float}).to_csv(str(filename) + '_CDI_score_data_thre' + str(threCDI) + '.txt', sep='\t', header=None, index=None)
+  pd.DataFrame(filltered_eei, columns=[0,1,2]).astype({0:int, 1:int, 2:float}).to_csv(str(filename) + '_EEI_score_data_thre' + str(threEEI) + '.txt', sep='\t', header=None, index=None)
+  logger.info(f"Top {threCDI} CDI, value > {threCDI_value}, len: {filltered_cdi.shape[0]} / whole: {Allgene*(Allgene-1)}")
+  logger.info(f"Top {threCDI} EEI, value > {threEEI_value}, len: {filltered_eei.shape[0]} / whole: {Allgene*(Allgene-1)}")
+  return DEGREE_CDI, DEGREE_EEI
+
 
 def sort_neighbor(i, array, num, threshold):
    if( num == 0 ):
@@ -281,9 +365,9 @@ def main():
   parser.add_argument("matrix", help="Input matrix", type=str)
   parser.add_argument("filename", help="File name", type=str)
   parser.add_argument("mode", help="mode for (1) percentage threshold or (2) solid threshold for CDI and EEI (default: 1)", type=int, default=1)
-  parser.add_argument("--threPer", help="threshold (percentage) for CDI and EEI (default: 1.0). Used when mode=1.", type=float, default=1.0)
-  parser.add_argument("--threCDI", help="threshold for CDI (default: 20.0). Used when mode=2.", type=float, default=20)
-  parser.add_argument("--threEEI", help="threshold for EEI (default: 10.0). Used when mode=2.", type=float, default=10)
+#   parser.add_argument("--threPer", help="Threshold (percentage) for CDI and EEI (default: 10 = 10 percentage). Used when mode=1.", type=int, default=10)
+  parser.add_argument("--threCDI", help="Threshold for CDI (default: 0.5). When mode = 1, filter out top value*100\%; when mode = 1, filter out those >= value.", type=float, default=0.5)
+  parser.add_argument("--threEEI", help="Threshold for EEI (default: 0.5). When mode = 1, filter out top value*100\%; when mode = 1, filter out those >= value.", type=float, default=0.5)
   parser.add_argument("--version", help="estimateEEI version 1.0", type=float )
 
   args = parser.parse_args()
@@ -306,8 +390,10 @@ def main():
   
   Count_joint, Prob_joint = calc_degree_CDI(A, args.threCDI, output_directory+'/'+args.filename )
   Count_excl, Prob_excl = calc_degree_EEI(A, args.threEEI, output_directory+'/'+args.filename )
-  degree_cdi, degree_eei = calc_CDI(A, Count_joint, Prob_joint, Count_excl, Prob_excl, args.threCDI, args.threEEI, output_directory+'/'+args.filename)
- 
+  if args.mode == 1:
+    degree_cdi, degree_eei = calc_CDI_topThreshold(A, Count_joint, Prob_joint, Count_excl, Prob_excl, args.threCDI, args.threEEI, output_directory+'/'+args.filename)
+  else:
+    degree_cdi, degree_eei = calc_CDI(A, Count_joint, Prob_joint, Count_excl, Prob_excl, args.threCDI, args.threEEI, output_directory+'/'+args.filename)
   logger.info("--------------------------------------------------------------")
   logger.info("Compute CDI and EEI degree distribution.")
   calc_degree_dist(degree_cdi, "CDI_degree_distribution", 0, args.threCDI, output_directory+'/'+args.filename)
