@@ -405,7 +405,7 @@ def main():
   df2 = pd.read_csv(output_directory+'/'+args.filename+f"_EEI_score_data_thre{args.threEEI}.txt", sep='\t', header=None)
   df2[2] = -1
   df1[2] = 1
-  pd.concat([df1, df2]).reset_index(drop=True).to_csv(output_directory+'/'+args.filename+"_threCDI{}_threEEI{}.edgelist".format(args.threCDI, args.threEEI), sep='\t', header=None, index=None)
+  pd.concat([df1, df2]).reset_index(drop=True).to_csv(output_directory+'/'+args.filename+"_eeisp.edgelist", sep='\t', header=None, index=None)
   elapsed_time = time.time() - startt
   logger.info ("Elapsed_time:{0}".format(elapsed_time) + "[sec]")
   print ("Elapsed_time:{0}".format(elapsed_time) + "[sec]")

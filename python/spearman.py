@@ -19,7 +19,7 @@ parser.add_argument("out_file_name",
 
 parser.add_argument("-correlation_threshold", 
                     type=float, 
-                    help="Threshold for filtering high correlations. (default:0.4)",
+                    help="Threshold for filtering out top value*100\% correlations. (default:0.4)",
                     default=0.4)
 
 args = parser.parse_args()
@@ -38,26 +38,26 @@ correlations = correlations[correlations != 1]
 
 # Determine top 5% thresholds for positive and negative correlations
 
-positive_threshold = np.percentile(correlations, 99)
-negative_threshold = np.percentile(correlations, 0.1)
-print(positive_threshold)
-print(negative_threshold)
+positive_threshold = np.percentile(correlations, 100 - int(args.correlation_threshold*100))
+negative_threshold = np.percentile(correlations, int(args.correlation_threshold*100))
+# print(positive_threshold)
+# print(negative_threshold)
 num_positive_edges_top_1_percent = np.sum(correlations >= positive_threshold)
 num_negative_edges_top_1_percent = np.sum(correlations <= negative_threshold)
 
-# Plotting
-plt.hist(correlations, bins='auto', density=True, alpha=0.7, color='blue')
-plt.axvline(x=positive_threshold, color='red', linestyle='dashed', linewidth=2)
-plt.axvline(x=negative_threshold, color='green', linestyle='dashed', linewidth=2)
-plt.title('Frequency Distribution of Correlations in ' + args.out_file_name)
-plt.xlabel('Spearman Correlation Coefficient')
-plt.ylabel('Frequency')
+# # Plotting
+# plt.hist(correlations, bins='auto', density=True, alpha=0.7, color='blue')
+# plt.axvline(x=positive_threshold, color='red', linestyle='dashed', linewidth=2)
+# plt.axvline(x=negative_threshold, color='green', linestyle='dashed', linewidth=2)
+# plt.title('Frequency Distribution of Correlations in ' + args.out_file_name)
+# plt.xlabel('Spearman Correlation Coefficient')
+# plt.ylabel('Frequency')
 
-plot_file_name = os.path.join(os.path.dirname(args.file_path), args.out_file_name + "_correlation_histogram.png")
-plt.savefig(plot_file_name)
+# plot_file_name = os.path.join(os.path.dirname(args.file_path), args.out_file_name + "_correlation_histogram.png")
+# plt.savefig(plot_file_name)
 
-print(f"Number of edges in the top 1% of positive correlations: {num_positive_edges_top_1_percent}")
-print(f"Number of edges in the top 0.1% of negative correlations: {num_negative_edges_top_1_percent}")
+print(f"Number of edges in the top {int(args.correlation_threshold*100)}% of positive correlations: {num_positive_edges_top_1_percent}")
+print(f"Number of edges in the top {int(args.correlation_threshold*100)}% of negative correlations: {num_negative_edges_top_1_percent}")
 
 # Identify high positive and negative correlations
 high_positive_corr = spearman_corr_matrix >= positive_threshold

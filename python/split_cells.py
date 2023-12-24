@@ -55,10 +55,9 @@ for i, cell_type in enumerate(merged_df['celltype'].unique()):
     cell_type_df.columns = new_gene_indices
     cell_type_df = cell_type_df.transpose()
 
-    index_tracker[cell_type] = new_gene_indices
-
     # Save to a new CSV file
-    cell_type = cell_type.replace(" ", "_")
+    cell_type = cell_type.replace(" ", "_") #TODO: information loss!
+    index_tracker[cell_type] = new_gene_indices
     output_file = os.path.join(output_directory, f'{cell_type}.csv')
     cell_type_df.to_csv(output_file)
 
