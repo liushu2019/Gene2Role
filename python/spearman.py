@@ -34,27 +34,10 @@ correlations = correlations[~np.isnan(correlations)]
 correlations = correlations[correlations != 1]
 
 # Calculate histogram of correlations
-#hist, bin_edges = np.histogram(correlations, bins='auto', density=True)
-
-# Determine top 5% thresholds for positive and negative correlations
-
 positive_threshold = np.percentile(correlations, 100 - int(args.correlation_threshold*100))
 negative_threshold = np.percentile(correlations, int(args.correlation_threshold*100))
-# print(positive_threshold)
-# print(negative_threshold)
 num_positive_edges_top_1_percent = np.sum(correlations >= positive_threshold)
 num_negative_edges_top_1_percent = np.sum(correlations <= negative_threshold)
-
-# # Plotting
-# plt.hist(correlations, bins='auto', density=True, alpha=0.7, color='blue')
-# plt.axvline(x=positive_threshold, color='red', linestyle='dashed', linewidth=2)
-# plt.axvline(x=negative_threshold, color='green', linestyle='dashed', linewidth=2)
-# plt.title('Frequency Distribution of Correlations in ' + args.out_file_name)
-# plt.xlabel('Spearman Correlation Coefficient')
-# plt.ylabel('Frequency')
-
-# plot_file_name = os.path.join(os.path.dirname(args.file_path), args.out_file_name + "_correlation_histogram.png")
-# plt.savefig(plot_file_name)
 
 print(f"Number of edges in the top {int(args.correlation_threshold*100)}% of positive correlations: {num_positive_edges_top_1_percent}")
 print(f"Number of edges in the top {int(args.correlation_threshold*100)}% of negative correlations: {num_negative_edges_top_1_percent}")
@@ -73,9 +56,15 @@ for i, j in zip(*high_corr_indices):
        gene_pairs.append((df.columns[i], df.columns[j], sign))
 
 gene_pairs_df = pd.DataFrame(gene_pairs)
+# rename node to integers and save the mapping dataframe.
+node_list = list(set(gene_pairs_df[0]) | set(gene_pairs_df[1]))
+mapping = dict(zip(node_list, range(len(node_list))))
+gene_pairs_df[0] = gene_pairs_df[0].map(mapping)
+gene_pairs_df[1] = gene_pairs_df[1].map(mapping)
 output_file = os.path.join(os.path.dirname(args.file_path), args.out_file_name + "_spearman.edgelist")
 
 #Output the high correlation gene pairs
 gene_pairs_df.to_csv(output_file, sep='\t', index=False,header=False)
+pd.DataFrame(mapping, index=[1]).T.reset_index()[[1,'index']].to_csv(os.path.join(os.path.dirname(args.file_path), args.out_file_name + "_spearman_nodeID_mapping.tsv"), sep='\t', index=False,header=False)
 
 print('------------------- Finish -------------------')
