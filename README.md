@@ -2,7 +2,7 @@
 
 
 # folder structure:
-- Item 1
+
 - pipeline.py
 - tools
   - [SignedS2V](https://github.com/liushu2019/SignedS2V)
