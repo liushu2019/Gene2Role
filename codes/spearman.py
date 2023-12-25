@@ -19,8 +19,8 @@ parser.add_argument("out_file_name",
 
 parser.add_argument("-correlation_threshold", 
                     type=float, 
-                    help="Threshold for filtering out top value*100\% correlations. (default:0.001)",
-                    default=0.001)
+                    help="Threshold for filtering out top value*100 percent of positive correlations. (default:0.01)",
+                    default=0.01)
 parser.add_argument('--reindex', action='store_true', 
                     help='Flag for reindex gene names.')
 
@@ -36,13 +36,13 @@ correlations = correlations[~np.isnan(correlations)]
 correlations = correlations[correlations != 1]
 
 # Determine top pairs for positive and negative correlations
-positive_threshold = np.percentile(correlations, 100 - int(args.correlation_threshold*100))
-negative_threshold = np.percentile(correlations, int(args.correlation_threshold*100))
+positive_threshold = np.percentile(correlations, 100 - (args.correlation_threshold*100))
+negative_threshold = np.percentile(correlations, 0.1)
 # print the number of positive and negative edges
 num_positive_edges_top_percent = np.sum(correlations >= positive_threshold)
 num_negative_edges_top_percent = np.sum(correlations <= negative_threshold)
-print(f"Number of edges in the top {int(args.correlation_threshold*100)}% of positive correlations: {num_positive_edges_top_percent}")
-print(f"Number of edges in the top {int(args.correlation_threshold*100)}% of negative correlations: {num_negative_edges_top_percent}")
+print(f"Number of edges in the top {(args.correlation_threshold*100)}% of positive correlations: {num_positive_edges_top_percent}")
+print(f"Number of edges in the top 0.1% of negative correlations: {num_negative_edges_top_percent}")
 # Identify high positive and negative correlations
 high_positive_corr = spearman_corr_matrix >= positive_threshold
 high_negative_corr = spearman_corr_matrix <= negative_threshold
