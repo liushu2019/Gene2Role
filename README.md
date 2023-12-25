@@ -12,6 +12,7 @@ codes
   eeisp.py
 
 # command line
+```
 python pipeline.py TaskMode CellType EmbeddingMode input [**]
 
 TaskMode.      1: run SignedS2V for an edgelist file. 
@@ -24,7 +25,7 @@ EmbeddingMode. 1: single network embedding.
 input          Input file, either a gene X cell matrix for TaskMode 2 and 3, or edgelist for TaskMode 1.
 
 Other arguments, check "python pipeline.py --help"
-
+```
 # Exp:
 python pipeline.py 3 2 1 data/singleCell/test_rna/count.csv --project TEST321 --OPT1 --OPT2 --OPT3 --workers 61 --until_layer 1 --threCDI 0.0001 --threEEI 0.0001 --cell_metadata data/singleCell/test_rna/metadata.csv 
 
