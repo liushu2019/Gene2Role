@@ -3,13 +3,13 @@
 
 # folder structure:
 
--pipeline.py
--tools
- -[SignedS2V](https://github.com/liushu2019/SignedS2V)
--codes
- -split_cells.py
- -spearman.py
- -eeisp.py
+- pipeline.py
+- tools
+  - [SignedS2V](https://github.com/liushu2019/SignedS2V)
+- codes
+  - split_cells.py
+  - spearman.py
+  - eeisp.py
 
 # command line
 ```
