@@ -2,15 +2,15 @@
 
 
 # folder structure:
-
+```
 pipeline.py
 tools
-  SignedS2V
+  [SignedS2V](https://github.com/liushu2019/SignedS2V)
 codes
   split_cells.py
   spearman.py
   eeisp.py
-
+```
 # command line
 ```
 python pipeline.py TaskMode CellType EmbeddingMode input [**]
@@ -27,9 +27,11 @@ input          Input file, either a gene X cell matrix for TaskMode 2 and 3, or 
 Other arguments, check "python pipeline.py --help"
 ```
 # Exp:
+```
 python pipeline.py 3 2 1 data/singleCell/test_rna/count.csv --project TEST321 --OPT1 --OPT2 --OPT3 --workers 61 --until_layer 1 --threCDI 0.0001 --threEEI 0.0001 --cell_metadata data/singleCell/test_rna/metadata.csv 
-
-# Test progress records:
+```
+# [Memo] Test progress records:
+```
 1   1  1 O
 2   1  1 O
 2   2  1 
@@ -37,3 +39,4 @@ python pipeline.py 3 2 1 data/singleCell/test_rna/count.csv --project TEST321 --
 3   1  1 O
 3   2  1 O
 3   2  2 i
+```
