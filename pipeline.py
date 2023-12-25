@@ -33,7 +33,8 @@ def exec_signeds2v(args):
     os.chdir(current_dir)
     print ("Finished SignedS2V.")
     logger.info("Finished SignedS2V.")
-    
+    return args.output
+
 def exec_split_cells(args):
     if (args.matrix is None) or (args.cell_metadata is None):
         raise ValueError("[split cell] matrix and cell_metadata arguments needed.")
@@ -50,6 +51,8 @@ def exec_spearman(args):
     print ("Run spearman...")
     logger.info("Run spearman...")
     sub_args = [args.matrix, args.project, '-correlation_threshold', args.correlation_threshold]
+    if args.CellType != 2:
+        sub_args = sub_args + ['--reindex']
     run_script("codes/spearman.py", sub_args)
     print ("Finished spearman.")
     logger.info("Finished spearman.")
@@ -60,6 +63,8 @@ def exec_eeisp(args):
     print ("Run eeisp...")
     logger.info("Run eeisp...")
     sub_args = [args.matrix, args.project, args.mode, '--threCDI', args.threCDI, '--threEEI', args.threEEI]
+    if args.CellType != 2:
+        sub_args = sub_args + ['--reindex']
     run_script("codes/eeisp.py", sub_args)
     print ("Finished eeisp.")
     logger.info("Finished eeisp.")
@@ -140,27 +145,30 @@ def main():
     logger.setLevel(DEBUG)
     logger.info(args)
     logger.info(f"Absolute directory: {absolute_directory}")
-
+    output_file_name_list = []
     if args.TaskMode == 1: #run SignedS2V
-        exec_signeds2v(args)
+        output_file_name_list.append(exec_signeds2v(args))
+        print ("-------------------OUTPUT EMBEDDING-------------------")
+        print (f"{output_file_name}")
+        print ("------------------------------------------------------")
     else:
         if args.CellType == 2: #multi cell
             exec_split_cells(args)
             output_directory = os.path.dirname(args.matrix)
             output_directory = os.path.join(output_directory, 'splitMatrix')
             index_tracker = pd.read_csv(os.path.join(output_directory, 'index_tracker.tsv'), sep='\t', index_col=0)
+            mapping_file_dir = os.path.join(output_directory, 'index_tracker.tsv')
             list_input_file = []
             project_org = args.project
             for cell_type in index_tracker.columns:
                 output_file = os.path.join(output_directory, f'{cell_type}.csv')
-                cell_type_df = pd.read_csv(output_file)
                 if args.TaskMode == 2: #run spearman and SignedS2V from gene X cell count matrix
                     args.matrix = output_file
                     args.project = project_org + '_' + cell_type
                     exec_spearman(args)
                     if args.EmbeddingMode != 2: # embed separatly
                         args.input = os.path.join(os.path.dirname(args.matrix), args.project + "_spearman.edgelist")
-                        exec_signeds2v(args)
+                        output_file_name_list.append(exec_signeds2v(args))
                     else:
                         list_input_file.append(os.path.join(os.path.dirname(args.matrix), args.project + "_spearman.edgelist"))
                 elif args.TaskMode == 3: #run eeisp and SignedS2V from gene X cell count matrix.
@@ -169,32 +177,42 @@ def main():
                     exec_eeisp(args)
                     if args.EmbeddingMode != 2: # embed separatly
                         args.input = os.path.join(os.path.dirname(args.matrix), args.project + "_eeisp.edgelist")
-                        exec_signeds2v(args)
+                        output_file_name_list.append(exec_signeds2v(args))
                     else:
-                        list_input_file.append(os.path.join(os.path.dirname(args.matrix), args.project + "_spearman.edgelist"))
+                        list_input_file.append(os.path.join(os.path.dirname(args.matrix), args.project + "_eeisp.edgelist"))
             if args.EmbeddingMode == 2: #multi embedding
                 args.project = project_org
                 list_df = []
                 for file_dir in list_input_file:
                     df = pd.read_csv(file_dir, header=None, sep='\t')
                     list_df.append(df)
-                logger.info("Merge edgelist. Len=[{}]".format(','.join([df.shape[0] for df in list_df])))
+                logger.info("Merge edgelist. Len=[{}]".format(','.join([str(df.shape[0]) for df in list_df])))
                 output_dir = os.path.join(os.path.dirname(args.matrix), args.project + "_merged.edgelist")
                 pd.concat(list_df).reset_index(drop=True).to_csv(output_dir, sep='\t', header=None, index=None)
                 args.input = output_dir
-                exec_signeds2v(args)
+                output_file_name_list.append(exec_signeds2v(args))
         else: #single cell
             if args.TaskMode == 2: #run spearman and SignedS2V from gene X cell count matrix
                 exec_spearman(args)
                 args.input = os.path.join(os.path.dirname(args.matrix), args.project + "_spearman.edgelist")
-                exec_signeds2v(args)
+                output_file_name_list.append(exec_signeds2v(args))
+                mapping_file_dir =  os.path.join(os.path.dirname(args.matrix), args.project + "_spearman_nodeID_mapping.tsv")
             elif args.TaskMode == 3: #run eeisp and SignedS2V from gene X cell count matrix.
                 exec_eeisp(args)
                 args.input = os.path.join(os.path.dirname(args.matrix), args.project + "_eeisp.edgelist")
-                exec_signeds2v(args)
-                
+                output_file_name_list.append(exec_signeds2v(args))
+                mapping_file_dir =  os.path.join(os.path.dirname(args.matrix), args.project + "_number_nonzero_exp.txt")
+            
     print("Pipeline completed.")
 
+    print ("-------------------OUTPUT EMBEDDING-------------------")
+    for output_file_name in output_file_name_list:
+        print (f"{output_file_name}")
+    if args.TaskMode != 1:
+        print ("------------------- GENE NAME INFO -------------------")
+        print (mapping_file_dir)
+    print ("------------------------------------------------------")
+    
 if __name__ == "__main__":
     logger = getLogger("Gen2Role_pipeline")
     main()

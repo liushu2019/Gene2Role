@@ -21,6 +21,8 @@ parser.add_argument("-correlation_threshold",
                     type=float, 
                     help="Threshold for filtering out top value*100\% correlations. (default:0.001)",
                     default=0.001)
+parser.add_argument('--reindex', action='store_true', 
+                    help='Flag for reindex gene names.')
 
 args = parser.parse_args()
 
@@ -57,13 +59,14 @@ for i, j in zip(*high_corr_indices):
 gene_pairs_df = pd.DataFrame(gene_pairs)
 # rename node to integers and save the mapping dataframe.
 node_list = list(set(gene_pairs_df[0]) | set(gene_pairs_df[1]))
-mapping = dict(zip(node_list, range(len(node_list))))
-gene_pairs_df[0] = gene_pairs_df[0].map(mapping)
-gene_pairs_df[1] = gene_pairs_df[1].map(mapping)
 output_file = os.path.join(os.path.dirname(args.file_path), args.out_file_name + "_spearman.edgelist")
+mapping = dict(zip(node_list, range(len(node_list))))
 print (f'Number of genes: {len(mapping)}')
+if args.reindex:
+    gene_pairs_df[0] = gene_pairs_df[0].map(mapping)
+    gene_pairs_df[1] = gene_pairs_df[1].map(mapping)
+    pd.DataFrame(mapping, index=[1]).T.reset_index()[[1,'index']].to_csv(os.path.join(os.path.dirname(args.file_path), args.out_file_name + "_spearman_nodeID_mapping.tsv"), sep='\t', index=False,header=False)
 #Output the high correlation gene pairs
 gene_pairs_df.to_csv(output_file, sep='\t', index=False,header=False)
-pd.DataFrame(mapping, index=[1]).T.reset_index()[[1,'index']].to_csv(os.path.join(os.path.dirname(args.file_path), args.out_file_name + "_spearman_nodeID_mapping.tsv"), sep='\t', index=False,header=False)
 
 print('------------------- Finish -------------------')

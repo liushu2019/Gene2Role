@@ -37,9 +37,8 @@ def count_genes(input_data, filename):
   logger.info (f"Number of nonzero genes: {Allgene}")
   logger.info (f"Number of all cells: {Allcell}")
 
-  count_cells(A, nzero_index, filename)
-
-  return A
+  gene_mapping = count_cells(A, nzero_index, filename)
+  return A, gene_mapping
 
 
 def count_cells(A, nzero_index, filename):
@@ -52,7 +51,9 @@ def count_cells(A, nzero_index, filename):
   for d in range(0, len(count_exp)):
       fout0.writelines(str(d) +"\t"+ str(nzero_index[d])+"\t"+ str(count_exp[d])+"\n")
   fout0.close()
-  logger.info ("-----------------------------------------------")  
+  mapping = dict(zip(range(len(count_exp)), nzero_index))
+  logger.info ("-----------------------------------------------")
+  return mapping
 
 
 def calc_degree_CDI(A, threCDI, filename ):
@@ -369,6 +370,8 @@ def main():
   parser.add_argument("--threCDI", help="Threshold for CDI (default: 0.5). When mode = 1, filter out top value*100\%; when mode = 1, filter out those >= value.", type=float, default=0.5)
   parser.add_argument("--threEEI", help="Threshold for EEI (default: 0.5). When mode = 1, filter out top value*100\%; when mode = 1, filter out those >= value.", type=float, default=0.5)
   parser.add_argument("--version", help="estimateEEI version 1.0", type=float )
+  parser.add_argument('--reindex', action='store_true', 
+                  help='Flag for reindex gene names.')
 
   args = parser.parse_args()
   
@@ -386,7 +389,7 @@ def main():
   input_data = pd.read_csv(args.matrix, index_col=0, sep=",")
   logger.info(input_data.index)  
 
-  A = count_genes(input_data, output_directory+'/'+args.filename)
+  A, gene_mapping = count_genes(input_data, output_directory+'/'+args.filename)
   
   Count_joint, Prob_joint = calc_degree_CDI(A, args.threCDI, output_directory+'/'+args.filename )
   Count_excl, Prob_excl = calc_degree_EEI(A, args.threEEI, output_directory+'/'+args.filename )
@@ -405,7 +408,11 @@ def main():
   df2 = pd.read_csv(output_directory+'/'+args.filename+f"_EEI_score_data_thre{args.threEEI}.txt", sep='\t', header=None)
   df2[2] = -1
   df1[2] = 1
-  pd.concat([df1, df2]).reset_index(drop=True).to_csv(output_directory+'/'+args.filename+"_eeisp.edgelist", sep='\t', header=None, index=None)
+  df = pd.concat([df1, df2]).reset_index(drop=True)
+  if not args.reindex:
+     df[0] = df[0].map(gene_mapping)
+     df[1] = df[1].map(gene_mapping)
+  df.to_csv(output_directory+'/'+args.filename+"_eeisp.edgelist", sep='\t', header=None, index=None)
   elapsed_time = time.time() - startt
   logger.info ("Elapsed_time:{0}".format(elapsed_time) + "[sec]")
   print ("Elapsed_time:{0}".format(elapsed_time) + "[sec]")
