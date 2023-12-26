@@ -4,6 +4,9 @@ import os
 import pandas as pd
 from logging import getLogger, INFO, DEBUG
 import logging
+from concurrent.futures import ProcessPoolExecutor, as_completed
+import multiprocessing
+import copy
 
 def run_script(script_name, script_args):
     script_args = [str(x) for x in script_args]
@@ -159,27 +162,22 @@ def main():
             index_tracker = pd.read_csv(os.path.join(output_directory, 'index_tracker.tsv'), sep='\t', index_col=0)
             mapping_file_dir = os.path.join(output_directory, 'index_tracker.tsv')
             list_input_file = []
+            list_project = []
             project_org = args.project
-            for cell_type in index_tracker.columns:
-                output_file = os.path.join(output_directory, f'{cell_type}.csv')
-                if args.TaskMode == 2: #run spearman and SignedS2V from gene X cell count matrix
-                    args.matrix = output_file
-                    args.project = project_org + '_' + cell_type
-                    exec_spearman(args)
-                    if args.EmbeddingMode != 2: # embed separatly
-                        args.input = os.path.join(os.path.dirname(args.matrix), args.project + "_spearman.edgelist")
-                        output_file_name_list.append(exec_signeds2v(args))
-                    else:
-                        list_input_file.append(os.path.join(os.path.dirname(args.matrix), args.project + "_spearman.edgelist"))
-                elif args.TaskMode == 3: #run eeisp and SignedS2V from gene X cell count matrix.
-                    args.matrix = output_file
-                    args.project = project_org + '_' + cell_type
-                    exec_eeisp(args)
-                    if args.EmbeddingMode != 2: # embed separatly
-                        args.input = os.path.join(os.path.dirname(args.matrix), args.project + "_eeisp.edgelist")
-                        output_file_name_list.append(exec_signeds2v(args))
-                    else:
-                        list_input_file.append(os.path.join(os.path.dirname(args.matrix), args.project + "_eeisp.edgelist"))
+            with ProcessPoolExecutor(max_workers=args.workers) as executor:
+                for cell_type in index_tracker.columns:
+                    args_tmp = copy.deepcopy(args)
+                    output_file = os.path.join(output_directory, f'{cell_type}.csv')
+                    args_tmp.matrix = output_file
+                    args_tmp.project = project_org + '_' + cell_type
+                    list_input_file.append(os.path.join(os.path.dirname(args_tmp.matrix), args_tmp.project + "_eeisp.edgelist"))
+                    list_project.append(project_org + '_' + cell_type)
+                    if args.TaskMode == 2: #run spearman and SignedS2V from gene X cell count matrix
+                        job = executor.submit(exec_spearman, args_tmp)
+                        list_input_file.append(os.path.join(os.path.dirname(args_tmp.matrix), args_tmp.project + "_spearman.edgelist"))
+                    elif args.TaskMode == 3: #run eeisp and SignedS2V from gene X cell count matrix.
+                        job = executor.submit(exec_eeisp, args_tmp)
+                        
             if args.EmbeddingMode == 2: #multi embedding
                 args.project = project_org
                 list_df = []
@@ -191,6 +189,12 @@ def main():
                 pd.concat(list_df).reset_index(drop=True).to_csv(output_dir, sep='\t', header=None, index=None)
                 args.input = output_dir
                 output_file_name_list.append(exec_signeds2v(args))
+            else: # embed separatly
+                for input_dir in list(zip(list_input_file, list_project)):
+                    args.input = input_dir[0]
+                    args.project = input_dir[1]
+                    output_file_name_list.append(exec_signeds2v(args))
+                
         else: #single cell
             if args.TaskMode == 2: #run spearman and SignedS2V from gene X cell count matrix
                 exec_spearman(args)
