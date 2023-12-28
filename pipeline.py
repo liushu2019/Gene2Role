@@ -72,6 +72,16 @@ def exec_eeisp(args):
     print ("Finished eeisp.")
     logger.info("Finished eeisp.")
     
+def exec_merge_edgelist(args, file_list):
+    if (args.matrix is None) or (args.project is None):
+        raise ValueError("[merge edgelist] matrix and project arguments needed.")
+    print ("Run merge edgelist...")
+    logger.info("Run merge edgelist...")
+    sub_args = [args.matrix, args.project] + file_list
+    run_script("codes/merge_edgelist.py", sub_args)
+    print ("Finished merge edgelist.")
+    logger.info("Finished merge edgelist.")
+    
 def exec_(args):
     if (args.matrix is None) or (args.cell_metadata is None):
         raise ValueError("[split cell] matrix and cell_metadata arguments needed.")
@@ -86,10 +96,9 @@ def main():
     parser = argparse.ArgumentParser(description="Gene2Role pipeline script")
 
     parser.add_argument("TaskMode", type=int, default=1, help="Task mode. 1: run SignedS2V for an edgelist file. 2: run spearman and SignedS2V from gene X cell count matrix. 3: run eeisp and SignedS2V from gene X cell count matrix.")
-    parser.add_argument("CellType", type=int, default=1, help="Cell type. 1: single cell-type. 2: multiple cell-type.")
+    parser.add_argument("CellType", type=int, default=1, help="Cell type. 1: single cell-type. 2: multiple cell-type in one matrix. 3: multiple gene X cell count matrixes.")
     parser.add_argument("EmbeddingMode", type=int, default=1, help="Embedding mode. 1: single network embedding. 2: multiple network embedding, only work if the previous argument is 2.")
-    parser.add_argument('input', nargs='?', default='',
-                        help='[ALL] Input file, either a gene X cell matrix or edgelist.')
+    parser.add_argument('input', nargs='+', default='[ALL] Input file. For CellType = 1, an edgelist; for CellType = 2, a gene X cell matrix; for CellType = 3, multiple gene X cell matrixes separated by space.')
     parser.add_argument("--project", type=str, default='sample', help="Project name which will be used as the folder name.")
     # args for SignedS2V
     parser.add_argument('--output', nargs='?', default=None,
@@ -135,11 +144,22 @@ def main():
     parser.add_argument("--threEEI", help="[ESSIP] Threshold for EEI (default: 0.5). When mode = 1, filter out top value*100\%; when mode = 1, filter out those >= value.", type=float, default=0.5)
     # split cell
     # parser.add_argument("--count_matrix", type=str, help="[split cell] CSV file for gene-cell matrix.")
-    parser.add_argument("--cell_metadata", type=str, help="[split cell] CSV file with cell type information.")        
+    parser.add_argument("--cell_metadata", type=str, help="[split cell] CSV file with cell type information.", default=None)        
     # downstream TODO    
     args = parser.parse_args()
-    absolute_directory = os.path.abspath(args.input)
-    args.matrix = args.input = absolute_directory
+    print (args)
+    if args.CellType == 3 and len(args.input) <= 0:
+        raise ValueError("Received one input file while CellType = 3.")
+    if args.CellType > 1 and args.cell_metadata is None:
+        raise ValueError("No cell metadata received while CellType = 2 or 3.")
+    if args.CellType != 3:
+        args.input = args.input[0]
+        absolute_directory = os.path.abspath(args.input)
+        args.matrix = args.input = absolute_directory
+    else:
+        absolute_directory = os.path.abspath(args.input[0])
+        args.matrix = args.input = [os.path.abspath(x) for x in args.input]
+        
     output_directory = os.path.dirname(absolute_directory)
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
     file_handler = logging.FileHandler(f'{output_directory}/Gene2Role_{args.project}.log', mode="w")
@@ -149,6 +169,7 @@ def main():
     logger.info(args)
     logger.info(f"Absolute directory: {absolute_directory}")
     output_file_name_list = []
+    
     if args.TaskMode == 1: #run SignedS2V
         output_file_name_list.append(exec_signeds2v(args))
         print ("-------------------OUTPUT EMBEDDING-------------------")
@@ -170,32 +191,27 @@ def main():
                     output_file = os.path.join(output_directory, f'{cell_type}.csv')
                     args_tmp.matrix = output_file
                     args_tmp.project = project_org + '_' + cell_type
-                    list_input_file.append(os.path.join(os.path.dirname(args_tmp.matrix), args_tmp.project + "_eeisp.edgelist"))
                     list_project.append(project_org + '_' + cell_type)
                     if args.TaskMode == 2: #run spearman and SignedS2V from gene X cell count matrix
                         job = executor.submit(exec_spearman, args_tmp)
                         list_input_file.append(os.path.join(os.path.dirname(args_tmp.matrix), args_tmp.project + "_spearman.edgelist"))
                     elif args.TaskMode == 3: #run eeisp and SignedS2V from gene X cell count matrix.
                         job = executor.submit(exec_eeisp, args_tmp)
+                        list_input_file.append(os.path.join(os.path.dirname(args_tmp.matrix), args_tmp.project + "_eeisp.edgelist"))
                         
             if args.EmbeddingMode == 2: #multi embedding
                 args.project = project_org
-                list_df = []
-                for file_dir in list_input_file:
-                    df = pd.read_csv(file_dir, header=None, sep='\t')
-                    list_df.append(df)
-                logger.info("Merge edgelist. Len=[{}]".format(','.join([str(df.shape[0]) for df in list_df])))
-                output_dir = os.path.join(os.path.dirname(args.matrix), args.project + "_merged.edgelist")
-                pd.concat(list_df).reset_index(drop=True).to_csv(output_dir, sep='\t', header=None, index=None)
-                args.input = output_dir
+                exec_merge_edgelist(args, list_input_file)
+                args.input = os.path.join(os.path.dirname(args.matrix), args.project + "_merged.edgelist")
                 output_file_name_list.append(exec_signeds2v(args))
             else: # embed separatly
                 for input_dir in list(zip(list_input_file, list_project)):
                     args.input = input_dir[0]
                     args.project = input_dir[1]
                     output_file_name_list.append(exec_signeds2v(args))
-                
-        else: #single cell
+        elif args.CellType == 3: #multiple matrixes
+            pass
+        elif args.CellType == 1: #single cell
             if args.TaskMode == 2: #run spearman and SignedS2V from gene X cell count matrix
                 exec_spearman(args)
                 args.input = os.path.join(os.path.dirname(args.matrix), args.project + "_spearman.edgelist")
