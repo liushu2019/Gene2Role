@@ -365,10 +365,10 @@ def main():
   parser = argparse.ArgumentParser()
   parser.add_argument("matrix", help="Input matrix", type=str)
   parser.add_argument("filename", help="File name", type=str)
-  parser.add_argument("mode", help="mode for (1) percentage threshold or (2) solid threshold for CDI and EEI (default: 1)", type=int, default=1)
+  parser.add_argument("mode", help="mode for (1) percentage threshold or (2) solid threshold for CDI and EEI (default: 1)", type=int)
 #   parser.add_argument("--threPer", help="Threshold (percentage) for CDI and EEI (default: 10 = 10 percentage). Used when mode=1.", type=int, default=10)
-  parser.add_argument("--threCDI", help="Threshold for CDI (default: 0.5). When mode = 1, filter out top value*100 percent; when mode = 1, filter out those >= value.", type=float, default=0.5)
-  parser.add_argument("--threEEI", help="Threshold for EEI (default: 0.5). When mode = 1, filter out top value*100 percent; when mode = 1, filter out those >= value.", type=float, default=0.5)
+  parser.add_argument("--threCDI", help="Threshold for CDI (default: 0.01). When mode = 1, filter out top value*100 percent; when mode = 1, filter out those >= value.", type=float, default=0.01)
+  parser.add_argument("--threEEI", help="Threshold for EEI (default: 0.001). When mode = 1, filter out top value*100 percent; when mode = 1, filter out those >= value.", type=float, default=0.001)
   parser.add_argument("--version", help="estimateEEI version 1.0", type=float )
   parser.add_argument('--reindex', action='store_true', 
                   help='Flag for reindex gene names.')

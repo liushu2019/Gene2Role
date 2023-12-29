@@ -54,7 +54,7 @@ def exec_spearman(args):
     print ("Run spearman...")
     logger.info("Run spearman...")
     sub_args = [args.matrix, args.project, '-correlation_threshold', args.correlation_threshold]
-    if args.CellType != 2:
+    if args.reindex:
         sub_args = sub_args + ['--reindex']
     run_script("codes/spearman.py", sub_args)
     print ("Finished spearman.")
@@ -66,7 +66,7 @@ def exec_eeisp(args):
     print ("Run eeisp...")
     logger.info("Run eeisp...")
     sub_args = [args.matrix, args.project, args.mode, '--threCDI', args.threCDI, '--threEEI', args.threEEI]
-    if args.CellType != 2:
+    if args.reindex:
         sub_args = sub_args + ['--reindex']
     run_script("codes/eeisp.py", sub_args)
     print ("Finished eeisp.")
@@ -100,6 +100,8 @@ def main():
     parser.add_argument("EmbeddingMode", type=int, default=1, help="Embedding mode. 1: single network embedding. 2: multiple network embedding, only work if the previous argument is 2.")
     parser.add_argument('input', nargs='+', default='[ALL] Input file. For CellType = 1, an edgelist; for CellType = 2, a gene X cell matrix; for CellType = 3, multiple gene X cell matrixes separated by space.')
     parser.add_argument("--project", type=str, default='sample', help="Project name which will be used as the folder name.")
+    parser.add_argument('--reindex', action='store_true', 
+                        help='Flag for reindexing genes. Needed if gene name contained in input file.')
     # args for SignedS2V
     parser.add_argument('--output', nargs='?', default=None,
                         help='[SignedS2V] Output emb path, if Not given, follow input file name')
@@ -150,15 +152,17 @@ def main():
     print (args)
     if args.CellType == 3 and len(args.input) <= 0:
         raise ValueError("Received one input file while CellType = 3.")
-    if args.CellType > 1 and args.cell_metadata is None:
+    if args.TaskMode == 1 and args.EmbeddingMode == 2 and len(args.input) <= 0:
+        raise ValueError("Received one input file while TaskMode = 1 and EmbeddingMode = 2.")
+    if args.CellType == 2 and args.cell_metadata is None:
         raise ValueError("No cell metadata received while CellType = 2 or 3.")
-    if args.CellType != 3:
+    if args.CellType == 3 or (args.TaskMode == 1 and args.EmbeddingMode == 2): # multiple input
+        absolute_directory = os.path.abspath(args.input[0])
+        args.matrix = args.input = [os.path.abspath(x) for x in args.input]
+    else: # single input
         args.input = args.input[0]
         absolute_directory = os.path.abspath(args.input)
         args.matrix = args.input = absolute_directory
-    else:
-        absolute_directory = os.path.abspath(args.input[0])
-        args.matrix = args.input = [os.path.abspath(x) for x in args.input]
         
     output_directory = os.path.dirname(absolute_directory)
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
@@ -171,10 +175,13 @@ def main():
     output_file_name_list = []
     
     if args.TaskMode == 1: #run SignedS2V
-        output_file_name_list.append(exec_signeds2v(args))
-        print ("-------------------OUTPUT EMBEDDING-------------------")
-        print (f"{output_file_name}")
-        print ("------------------------------------------------------")
+        if args.EmbeddingMode == 1:
+            output_file_name_list.append(exec_signeds2v(args))
+        else: # multiple edgelist
+            args.matrix = args.matrix[0]
+            exec_merge_edgelist(args, args.input)
+            args.input = os.path.join(os.path.dirname(args.matrix), args.project + "_merged.edgelist")
+            output_file_name_list.append(exec_signeds2v(args)) 
     else:
         if args.CellType == 2: #multi cell
             exec_split_cells(args)
@@ -210,7 +217,38 @@ def main():
                     args.project = input_dir[1]
                     output_file_name_list.append(exec_signeds2v(args))
         elif args.CellType == 3: #multiple matrixes
-            pass
+            input_list_org = args.input
+            project_org = args.project
+            matrix_org = args.matrix
+            list_input_file = []
+            list_project = []
+            with ProcessPoolExecutor(max_workers=args.workers) as executor:
+                for ix, input_dir in enumerate(input_list_org):
+                    args_tmp = copy.deepcopy(args)
+                    args_tmp.input = input_dir
+                    args_tmp.matrix = input_dir
+                    args_tmp.project = project_org + '_' + str(ix)
+                    list_project.append(project_org + '_' + str(ix))
+                    if args.TaskMode == 2: #run spearman and SignedS2V from gene X cell count matrix
+                        job = executor.submit(exec_spearman, args_tmp)
+                        list_input_file.append(os.path.join(os.path.dirname(args_tmp.matrix), args_tmp.project + "_spearman.edgelist"))
+                    elif args.TaskMode == 3: #run eeisp and SignedS2V from gene X cell count matrix.
+                        job = executor.submit(exec_eeisp, args_tmp)
+                        list_input_file.append(os.path.join(os.path.dirname(args_tmp.matrix), args_tmp.project + "_eeisp.edgelist"))
+                        
+            if args.EmbeddingMode == 2: #multi embedding
+                args.project = project_org
+                args.matrix = args.matrix[0]
+                exec_merge_edgelist(args, list_input_file)
+                args.input = os.path.join(os.path.dirname(input_list_org[0]), args.project + "_merged.edgelist")
+                args.matrix = matrix_org
+                output_file_name_list.append(exec_signeds2v(args))
+            else: # embed separatly
+                for input_dir in list(zip(list_input_file, list_project)):
+                    args.input = input_dir[0]
+                    args.project = input_dir[1]
+                    output_file_name_list.append(exec_signeds2v(args))
+                    
         elif args.CellType == 1: #single cell
             if args.TaskMode == 2: #run spearman and SignedS2V from gene X cell count matrix
                 exec_spearman(args)
@@ -228,7 +266,7 @@ def main():
     print ("-------------------OUTPUT EMBEDDING-------------------")
     for output_file_name in output_file_name_list:
         print (f"{output_file_name}")
-    if args.TaskMode != 1:
+    if args.TaskMode == 2 or args.reindex:
         print ("------------------- GENE NAME INFO -------------------")
         print (mapping_file_dir)
     print ("------------------------------------------------------")
