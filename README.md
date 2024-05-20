@@ -1,7 +1,10 @@
-# g2r_work
+# Gene2role
+Hi! This repository hosts the code for our paper Gene2role: a role-based gene embedding method for comparative analysis of signed gene regulatory networks.
+It is structured into two main sections: 1. Tutorial for Gene2role and 2. Reproduction of the paper’s results.
 
+# Tutorial
 
-# folder structure:
+## folder structure:
 
 - pipeline.py
 - tools
@@ -11,7 +14,7 @@
   - spearman.py
   - eeisp.py
 
-# command line
+## command line
 ```
 python pipeline.py TaskMode CellType EmbeddingMode input [**]
 
@@ -26,11 +29,11 @@ input          Input file, either a gene X cell matrix for TaskMode 2 and 3, or 
 
 Other arguments, check "python pipeline.py --help"
 ```
-# Exp:
+## Exp:
 ```
 python pipeline.py 3 2 1 data/singleCell/test_rna/count.csv --project TEST321 --OPT1 --OPT2 --OPT3 --workers 61 --until_layer 1 --threCDI 0.0001 --threEEI 0.0001 --cell_metadata data/singleCell/test_rna/metadata.csv 
 ```
-# Parameter combination
+## Parameter combination
 ```
 TBD
 ```
