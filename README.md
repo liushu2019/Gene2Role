@@ -34,3 +34,9 @@ python pipeline.py 3 2 1 data/singleCell/test_rna/count.csv --project TEST321 --
 ```
 TBD
 ```
+
+# Reproduction 
+
+All the processed data can be downloaded from https://figshare.com/articles/dataset/data/25852915.
+The basic information about the data we used is as follows:
+![TableS1](TableS1.jpg)
