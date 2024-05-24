@@ -70,13 +70,13 @@ We used Gene2role to generate embedding by the following hyperparameters using t
    - Task mode: 3 2 2  
 ### Result 3
 1. Human PBMC dataset.
-   -Task mode: 3 2 2
-2. single-cell multi-omics dataset
-   -Task mode: 1 2 2
+   - Task mode: 3 2 2
+2. single-cell multi-omics dataset.
+   - Task mode: 1 2 2
 ### Result 4
 The codes for clustering genes using lovain algorithm can be found in **XXXX**.
 We used the embeddings generated previously to analyze the gene module stability.
-Specifically, for human glioblastoma dataset, we used the embedding generated in **Result 2**. And for single-cell multi-omics dataset, we used the embedding generated in **Result 4**
+Specifically, for human glioblastoma dataset, we used the embedding generated in **Result 2**. And for single-cell multi-omics dataset, we used the embedding generated in **Result 3**
 ## Downstream analysis
 The codes for downstream analyzed of the embeddings can be found in `reprodoce` accordingly.
 
