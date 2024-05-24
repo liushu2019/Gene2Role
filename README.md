@@ -50,17 +50,35 @@ All the processed data generated in the paper can be downloaded from https://fig
 The basic information about the data we used is as follows:
 ![TableS1](TableS1.jpg)
 
-### Gene2role hyperparameters
+## Gene2role hyperparameters
 We used Gene2role to generate embedding by the following hyperparameters using the `pipeline.py` mention above.
 
-### Downstream analysis
-In **result1**, we primarily analyzed gene embeddings from a single GRN generated using four different data types. The analysis processes for simulated and curated gene regulatory networks can be found in `\reproduce\result1\simulated_and_curated_networks.R`, and for single-cell RNA-seq and single-cell multi-omics data in `\reproduce\result1\single_cell_networks.R`.
-
-In **result2**, we analyzed the differentially topological genes from pair cell types. you can find the codes in '`\reproduce\result2\`
-
-In **result3**, we analyzed the differentially topological genes from multiple cell types. you can find the codes in '`\reproduce\result3\`
-
-In **result4**, we analyszed the gene module stability between two cell states. you can find the codes in `\reproduce\result4\`
+### Result 1
+1. One simulated and four curated networks.
+   - Task mode: 1 1 1
+2. Single-cell RNA-seq network generated from B cell in human PBMC dataset
+   - EEISP task mode: 3 1 1
+   - spearman task mode: 2 1 1
+3. Single-cell multi-omics network generated from Ery_0 stat in multi-omics networks.
+   - 1 1 1	   
+### Result 2
+1. Human glioblastoma dataset.
+   - Task mode: 3 2 2
+2. CD4 cells from PBMC dataset.
+   - Task mode: 3 2 2
+3. Human BMMC dataset.
+   - Task mode: 3 2 2  
+### Result 3
+1. Human PBMC dataset.
+   -Task mode: 3 2 2
+2. single-cell multi-omics dataset
+   -Task mode: 1 2 2
+### Result 4
+The codes for clustering genes using lovain algorithm can be found in **XXXX**.
+We used the embeddings generated previously to analyze the gene module stability.
+Specifically, for human glioblastoma dataset, we used the embedding generated in **Result 2**. And for single-cell multi-omics dataset, we used the embedding generated in **Result 4**
+## Downstream analysis
+The codes for downstream analyzed of the embeddings can be found in `reprodoce` accordingly.
 
 # Contact
 Feel free to reach Xin Zeng (wstxinzeng@gmail) and Shu Liu (Shu.liu.eq@gmail.com)to request files and more details from the analysis process!
