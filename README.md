@@ -7,7 +7,7 @@ The repository is organized into two main sections:
 	2.	Reproduction of the Paper’s Results
 
 # Tutorial
-
+![workflow](workflow.png)
 
 ## folder structure:
 
