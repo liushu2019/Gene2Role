@@ -58,6 +58,7 @@ python pipeline.py 1 2 2 your_edgelist1 your_edgelist2 your_edgelistx
 
 ### 3. Constructing GRN using EEISP/Spearman Correlation and Generating Embedding Representations for a Single Cell Type
 If you have a gene X cell count matrix, want to construct a GRN , and generate embedding representations for a single cell type, use the following basic command:
+
 EEISP (recommended):
 ```
 python pipeline.py 3 1 1 your_count_matrix --threCDI 0.5 --threEEI 0.5
