@@ -60,14 +60,14 @@ python pipeline.py 1 2 2 your_edgelist1 your_edgelist2 your_edgelistx
 If you have a gene X cell count matrix, want to construct a GRN using Spearman correlation, and generate embedding representations for a single cell type, use the following basic command:
 
 ```
-python pipeline.py 2 1 1 your_count_matrix --cell_metadata your_cell_metadata --correlation_threshold 0.4
+python pipeline.py 2 1 1 your_count_matrix --correlation_threshold 0.4
 ```
 
 ### 4. Constructing GRN using EEISP and Generating Embedding Representations for a Single Cell Type
 If you have a gene X cell count matrix, want to construct a GRN using EEISP, and generate embedding representations for a single cell type, use the following basic command:
 
 ```
-python pipeline.py 3 1 1 your_count_matrix --cell_metadata your_cell_metadata --threCDI 0.5 --threEEI 0.5
+python pipeline.py 3 1 1 your_count_matrix --threCDI 0.5 --threEEI 0.5
 ```
 
 ### 5. Constructing GRN using Spearman Correlation and Generating Embedding Representations for Multiple Cell Types
@@ -85,6 +85,12 @@ python pipeline.py 3 2 2 your_count_matrix --cell_metadata your_cell_metadata --
 ```
 
 Note: Replace `your_edgelist`, `your_count_matrix`, `your_cell_metadata`, and other placeholders with the actual file names or paths corresponding to your data.
+
+`your_edgelist` is a TSV file representing the GRN with three columns, which are geneID1, geneID2, and edge sign (1/-1). The number of rows indicates the number of edges in the GRN.
+
+`your_count_matrix` is a CSV file representing the Gene X Cell count matrix. Columns are cells, and rows are genes. The value indicates the gene expression level.
+
+`your_cell_metadata` is a CSV file showing the relationship between cells and cell types. Columns are information about cells, and rows are cells. Two columns are required: [orig.ident] and [celltype]. [orig.ident] indicates the cell ID and must be aligned with the column names in `your_count_matrix`. [celltype] indicates the cell type of the cell.
 
 # Reproduction 
 
