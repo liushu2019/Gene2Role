@@ -80,7 +80,7 @@ Spearman:
 python pipeline.py 2 2 2 your_count_matrix --cell_metadata your_cell_metadata --correlation_threshold 0.4
 ```
 
-This command will also generate an index tracker file (index_tracker.tsv) to clarify the geneIDs across multiple GRNs. Columns are cell types and rows are genes. The corresponding values show the replaced ID in the GRN of the gene in the specified cell type.
+This command will also generate an index tracker file (`index_tracker.tsv`) to clarify the geneIDs across multiple GRNs. Columns are cell types and rows are genes. The corresponding values show the replaced ID in the GRN of the gene in the specified cell type.
 
 ### Note
 Replace `your_edgelist`, `your_count_matrix`, `your_cell_metadata`, and other placeholders with the actual file names or paths corresponding to your data.
