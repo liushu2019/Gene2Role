@@ -68,7 +68,6 @@ Spearman:
 python pipeline.py 2 1 1 your_count_matrix --correlation_threshold 0.4
 ```
 
-
 ### 4. Constructing GRN using EEISP/Spearman Correlation and Generating Embedding Representations for Multiple Cell Types
 If you have a gene X cell count matrix, want to construct GRNs, and generate embedding representations for multiple cell types, use the following basic command:
 
@@ -81,7 +80,10 @@ Spearman:
 python pipeline.py 2 2 2 your_count_matrix --cell_metadata your_cell_metadata --correlation_threshold 0.4
 ```
 
-Note: Replace `your_edgelist`, `your_count_matrix`, `your_cell_metadata`, and other placeholders with the actual file names or paths corresponding to your data.
+This command will also generate an index tracker file (index_tracker.tsv) to clarify the geneIDs across multiple GRNs. Columns are cell types and rows are genes. The corresponding values show the replaced ID in the GRN of the gene in the specified cell type.
+
+### Note
+Replace `your_edgelist`, `your_count_matrix`, `your_cell_metadata`, and other placeholders with the actual file names or paths corresponding to your data.
 
 `your_edgelist` is a TSV file representing the GRN with three columns, which are geneID1, geneID2, and edge sign (1/-1). The number of rows indicates the number of edges in the GRN.
 
