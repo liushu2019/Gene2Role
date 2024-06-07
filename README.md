@@ -86,11 +86,11 @@ This command will also generate an index tracker file (`index_tracker.tsv`) to c
 ### Note
 Replace `your_edgelist`, `your_count_matrix`, `your_cell_metadata`, and other placeholders with the actual file names or paths corresponding to your data.
 
-`your_edgelist` is a TSV file representing the GRN with three columns, which are geneID1, geneID2, and edge sign (1/-1). The number of rows indicates the number of edges in the GRN.
+`your_edgelist` is a TSV file representing the GRN with three columns, which are **geneID1**, **geneID2**, and **edge sign (1/-1)**. The number of rows indicates the number of edges in the GRN.
 
-`your_count_matrix` is a CSV file representing the Gene X Cell count matrix. Columns are cells, and rows are genes. The value indicates the gene expression level.
+`your_count_matrix` is a CSV file representing the **Gene X Cell** count matrix. Columns are cells, and rows are genes. The value indicates the gene expression level.
 
-`your_cell_metadata` is a CSV file showing the relationship between cells and cell types. Columns are information about cells, and rows are cells. Two columns are required: [orig.ident] and [celltype]. [orig.ident] indicates the cell ID and must be aligned with the column names in `your_count_matrix`. [celltype] indicates the cell type of the cell.
+`your_cell_metadata` is a CSV file showing the relationship between cells and cell types. Columns are information about cells, and rows are cells. Two columns are required: **[orig.ident]** and **[celltype]**. [orig.ident] indicates the cell ID and must be aligned with the column names in `your_count_matrix`. [celltype] indicates the cell type of the cell.
 
 # Reproduction 
 
