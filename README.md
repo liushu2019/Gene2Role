@@ -43,20 +43,13 @@ python pipeline.py 3 2 1 data/singleCell/test_rna/count.csv --project TEST321 --
 ## Common Usage
 
 ### 1. Generating Embedding Representations for a Single GRN
-If you have a single GRN and want to generate embedding representations, use the following basic command:
+#### 1. Edgelist
+If you have edgelist for a single GRN and want to generate embedding representations, use the following basic command:
 
 ```
 python pipeline.py 1 1 1 your_edgelist
 ```
-
-### 2. Generating Embedding Representations for Multiple GRNs Simultaneously
-If you have two or more GRNs and want to generate embedding representations simultaneously, use the following basic command:
-
-```
-python pipeline.py 1 2 2 your_edgelist1 your_edgelist2 your_edgelistx
-```
-
-### 3. Constructing GRN using EEISP/Spearman Correlation and Generating Embedding Representations for a Single Cell Type
+#### 2. Single-cell count matrix
 If you have a gene X cell count matrix, want to construct a GRN , and generate embedding representations for a single cell type, use the following basic command:
 
 EEISP (recommended):
@@ -68,7 +61,15 @@ Spearman:
 python pipeline.py 2 1 1 your_count_matrix --correlation_threshold 0.4
 ```
 
-### 4. Constructing GRN using EEISP/Spearman Correlation and Generating Embedding Representations for Multiple Cell Types
+### 2. Generating Embedding Representations for Multiple GRNs Simultaneously
+#### 1. Edgelist
+If you have two or more edgelists for GRNs and want to generate embedding representations simultaneously, use the following basic command:
+
+```
+python pipeline.py 1 2 2 your_edgelist1 your_edgelist2 your_edgelistx
+```
+
+#### 2. Single-cell count matrix and metadata 
 If you have a gene X cell count matrix, want to construct GRNs, and generate embedding representations for multiple cell types, use the following basic command:
 
 EEISP (recommended):
