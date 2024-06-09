@@ -104,24 +104,24 @@ We used Gene2role to generate embedding by the following hyperparameters using t
 
 ### Result 1
 1. One simulated and four curated networks.
-   - Task mode: 1 1 1
+   - Hyperparameters: 1 1 1
 2. Single-cell RNA-seq network generated from B cell in human PBMC dataset
-   - EEISP task mode: 3 1 1
-   - spearman task mode: 2 1 1
+   - EEISP hyperparameters: 3 1 1
+   - Spearman Hyperparameters: 2 1 1
 3. Single-cell multi-omics network generated from Ery_0 stat in multi-omics networks.
-   - 1 1 1	   
+   - Hyperparameters: 1 1 1	   
 ### Result 2
 1. Human glioblastoma dataset.
-   - Task mode: 3 2 2
+   - Hyperparameters: 3 2 2
 2. CD4 cells from PBMC dataset.
-   - Task mode: 3 2 2
+   - Hyperparameters: 3 2 2
 3. Human BMMC dataset.
-   - Task mode: 3 2 2  
+   - Hyperparameters: 3 2 2  
 ### Result 3
 1. Human PBMC dataset.
-   - Task mode: 3 2 2
+   - Hyperparameters: 3 2 2
 2. single-cell multi-omics dataset.
-   - Task mode: 1 2 2
+   - Hyperparameters: 1 2 2
 ### Result 4
 The codes for clustering genes using lovain algorithm can be found in **[URL](https://python-louvain.readthedocs.io/en/latest/)**.
 We used the embeddings generated previously to analyze the gene module stability.
