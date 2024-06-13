@@ -130,7 +130,7 @@ Specifically, for human glioblastoma dataset, we used the embedding generated in
 The codes for downstream analyzed of the embeddings can be found in `reprodoce` accordingly.
 
 # Contact
-Feel free to reach Xin Zeng (wstxinzeng@gmail) and Shu Liu (Shu.liu.eq@gmail.com)to request files and more details from the analysis process!
+Feel free to reach Xin Zeng (wstxinzeng@gmail.com) and Shu Liu (Shu.liu.eq@gmail.com)to request files and more details from the analysis process!
 
 # License
 This project is licensed under the MIT License.
