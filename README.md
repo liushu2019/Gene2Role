@@ -127,7 +127,7 @@ The codes for clustering genes using lovain algorithm can be found in **[URL](ht
 We used the embeddings generated previously to analyze the gene module stability.
 Specifically, for human glioblastoma dataset, we used the embedding generated in **Result 2**. And for single-cell multi-omics dataset, we used the embedding generated in **Result 3**
 ## Downstream analysis
-The codes for downstream analyzed of the embeddings can be found in `reprodoce` accordingly.
+The codes for downstream analyzed of the embeddings can be found in `reproduce` accordingly.
 
 # Contact
 Feel free to reach Xin Zeng (wstxinzeng@gmail.com) and Shu Liu (Shu.liu.eq@gmail.com)to request files and more details from the analysis process!
